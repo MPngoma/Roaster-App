@@ -18,7 +18,7 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false },
 });
 
-export default pool;
+// export default pool;
 
 // db.connect()
 //     .then(() => console.log("Connected to the database"))
