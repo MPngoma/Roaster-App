@@ -4,19 +4,24 @@ import pg from "pg";
 import bodyParser from "body-parser";
 
 const app = express();
-const port = 3000;
+const port = 3001;
 
-// Setting and connecting to the database
-const db = new pg.Client({
-    user: "postgres",
-    host: "localhost",
-    database: "insults",
-    password: "Migloleoj04!",
-    port: 5432,
+import pkg from "pg";
+import dotenv from "dotenv";
+
+dotenv.config(); // loads your .env file
+
+const { Pool } = pkg;
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false },
 });
 
-db.connect()
-    .then(() => console.log("Connected to the database"))
+export default pool;
+
+// db.connect()
+//     .then(() => console.log("Connected to the database"))
 // ---------------------------------------------------------------
 
 
@@ -29,13 +34,15 @@ app.get("/", async (req, res) => {
 
         // Getting a random insult from an API
             // const response = await axios.get("https://evilinsult.com/generate_insult.php");
-            // const response = await axios.get("https://official-joke-api.appspot.com/random_joke");
+            // const response = await axios.get("https://v2.jokeapi.dev/joke/Any?type=single");
 
         // Getting a random joke from the my database
-        const response = await db.query ("SELECT joke FROM roast ORDER BY RANDOM() LIMIT 1");
+        const response = await pool.query ("SELECT joke FROM roast ORDER BY RANDOM() LIMIT 1");
         console.log(response.rows[0].joke);
         res.render("index.ejs", { content: response.rows[0].joke});
-        
+
+        // console.log(response.data)
+        // res.render("index.ejs", {content: response.data})
     } catch (error) {
         res.render("index.ejs", { content: null });
     }
@@ -54,13 +61,13 @@ app.post("/create-roast", async (req, res) => {
     console.log(createdInsult);
     try {
         // Check if the insult is already in the database
-        const checkInsult = await db.query("SELECT * FROM created_roast WHERE joke = $1", [createdInsult]);
+        const checkInsult = await pool.query("SELECT * FROM created_roast WHERE joke = $1", [createdInsult]);
         if (checkInsult.rows.length > 0) {
             console.log("Insult already exists in the database.");
             return res.redirect("/create");
         }
         // Insert the insult into the database
-        const addInsult = await db.query("INSERT INTO created_roast (joke) VALUES ($1)", [createdInsult]);
+        const addInsult = await pool.query("INSERT INTO created_roast (joke) VALUES ($1)", [createdInsult]);
         res.redirect("/");
     } catch (error) {
         console.error("Error saving insult to the database:", error);
@@ -70,19 +77,19 @@ app.post("/create-roast", async (req, res) => {
 // ----------------------------------------------------------------
 
 
-// Post route to save the insult to the database
+// Post route to save the insult to the databaseS
 app.post("/save", async (req, res)=>{
     const insult = req.body.insult;
-    //console.log(insult); 
+    console.log(insult); 
     try {
         // Check if the insult is already in the database
-        const checkInsult = await db.query("SELECT * FROM roast WHERE joke = $1", [insult]);
+        const checkInsult = await pool.query("SELECT * FROM roast WHERE joke = $1", [insult]);
         if (checkInsult.rows.length > 0) {
             console.log("Insult already exists in the database.");  
             return res.redirect("/");
         }
         // Insert the insult into the database
-        const addInsult = await db.query("INSERT INTO roast (joke) VALUES ($1)", [insult]);
+        const addInsult = await pool.query("INSERT INTO roast (joke) VALUES ($1)", [insult]);
 } catch (error) {
         console.error("Error saving insult to the database:", error);
         res.status(500).send("Error saving insult");
