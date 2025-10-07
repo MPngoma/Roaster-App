@@ -61,13 +61,14 @@ app.post("/create-roast", async (req, res) => {
     console.log(createdInsult);
     try {
         // Check if the insult is already in the database
-        const checkInsult = await pool.query("SELECT * FROM created_roast WHERE joke = $1", [createdInsult]);
+        const checkInsult = await pool.query("SELECT * FROM roast WHERE joke = $1", [createdInsult]);
         if (checkInsult.rows.length > 0) {
             console.log("Insult already exists in the database.");
             return res.redirect("/create");
         }
         // Insert the insult into the database
         const addInsult = await pool.query("INSERT INTO created_roast (joke) VALUES ($1)", [createdInsult]);
+        const addIntoRoastDB = await pool.query("INSERT INTO roast (joke) VALUES ($1)", [createdInsult]);
         res.redirect("/");
     } catch (error) {
         console.error("Error saving insult to the database:", error);
