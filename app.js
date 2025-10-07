@@ -38,7 +38,7 @@ app.get("/", async (req, res) => {
 
         // Getting a random joke from the my database
         const response = await pool.query ("SELECT joke FROM roast ORDER BY RANDOM() LIMIT 1");
-        console.log(response.rows[0].joke);
+        // console.log(response.rows[0].joke);
         res.render("index.ejs", { content: response.rows[0].joke});
 
         // console.log(response.data)
